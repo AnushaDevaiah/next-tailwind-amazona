@@ -9,7 +9,7 @@ import data from './../../utils/data';
 
 export default function ProductScreen() {
   const { state, dispatch } = useContext(Store);
-
+  const router = useRouter();
   const { query } = useRouter();
   const { slug } = query;
   //finds the product slug matche the folder slug
@@ -24,18 +24,21 @@ export default function ProductScreen() {
     const existItem = state.cart.cartItems.find((x) => x.slug === product.slug);
     const quantity = existItem ? existItem.quantity + 1 : 1;
 
-    if (product.countInStock > quantity) {
+    if (product.countInStock < quantity) {
       alert('Sorry.Product is out of stock');
       return;
     }
 
     dispatch({ type: 'CART_ADD_ITEM', payload: { ...product, quantity } });
+    router.push('/cart');
   };
 
   return (
     <Layout title={product.name}>
       <div className="py-2">
-        <Link href="/">Back to products</Link>
+        <Link legacyBehavior href="/">
+          Back to products
+        </Link>
       </div>
       {/* column specification .Out of 4 columns we are using 2 columns for displaying images */}
       <div className="grid md:grid-cols-4 md:gap-3">
