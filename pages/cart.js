@@ -4,8 +4,10 @@ import { XCircleIcon } from '@heroicons/react/outline';
 import Layout from './../components/Layout';
 import Link from 'next/link';
 import Image from 'next/image';
+import axios from 'axios';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
+import { toast } from 'react-toastify';
 
 function CartScreen() {
   const router = useRouter();
@@ -18,9 +20,15 @@ function CartScreen() {
     dispatch({ type: 'CART_REMOVE_ITEM', payload: item });
   };
 
-  const updateCartHandler = (item, qty) => {
+  const updateCartHandler = async (item, qty) => {
     const quantity = Number(qty);
+    const { data } = await axios.get(`/api/products/${item._id}`);
+    if (data.countInStock < quantity) {
+      return toast.error('Sorry. Product is out of stock');
+    }
+
     dispatch({ type: 'CART_ADD_ITEM', payload: { ...item, quantity } });
+    toast.success('Product updated in the cart');
   };
 
   return (
@@ -88,18 +96,17 @@ function CartScreen() {
           <div className="card p-5">
             <ul>
               <li>
-                <div className="pb-5 text-xl">
-                  SubTotal({cartItems.reduce((a, c) => a + c.quantity, 0)}) : $
+                <div className="pb-3 text-xl">
+                  Subtotal ({cartItems.reduce((a, c) => a + c.quantity, 0)}) : $
                   {cartItems.reduce((a, c) => a + c.quantity * c.price, 0)}
                 </div>
               </li>
               <li>
                 <button
-                  className="primary-button w-full"
                   onClick={() => router.push('login?redirect=/shipping')}
+                  className="primary-button w-full"
                 >
-                  {' '}
-                  Check out
+                  Check Out
                 </button>
               </li>
             </ul>
