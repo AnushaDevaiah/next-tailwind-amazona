@@ -5,8 +5,9 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
 import { getError } from '../utils/error';
-import Layout from './../components/Layout';
+import Layout from '../components/Layout';
 import { useRouter } from 'next/router';
+import axios from 'axios';
 
 export default function LoginScreen() {
   const { data: session } = useSession();
@@ -23,12 +24,21 @@ export default function LoginScreen() {
   const {
     register,
     handleSubmit,
+    getValues,
     watch,
     formState: { errors },
   } = useForm();
 
-  const submitHandler = async ({ email, password }) => {
+  const submitHandler = async ({ name, email, password }) => {
     try {
+      //will create a new user
+      await axios.post('/api/auth/signup', {
+        name,
+        email,
+        password,
+      });
+
+      //then log in user using sign in function
       const result = await signIn('credentials', {
         redirect: false,
         email,
@@ -42,19 +52,35 @@ export default function LoginScreen() {
     }
   };
   return (
-    <Layout title="Login Page">
+    <Layout title="Create Account">
       <form
         className="mx-auto max-w-screen-md"
         onSubmit={handleSubmit(submitHandler)}
       >
-        <h1 className="mb-4 text-lg">Login</h1>
+        <h1 className="mb-4 text-lg">Create Account</h1>
+        <div className="mb-4">
+          <label htmlFor="name">Name</label>
+          <input
+            type="text"
+            className="w-full"
+            id="name"
+            autoFocus
+            {...register('name', {
+              required: 'Please enter name.',
+            })}
+          />
+          {/* {accepts two parameters  1)field name and 2)required validation} */}
+          {errors.name && (
+            <div className="text-red-600">{errors.name.message}</div>
+          )}
+        </div>
+
         <div className="mb-4">
           <label htmlFor="email">Email</label>
           <input
             type="email"
             className="w-full"
             id="email"
-            autoFocus
             {...register('email', {
               required: 'Please enter the email.',
               pattern: {
@@ -87,11 +113,37 @@ export default function LoginScreen() {
             <div className="text-red-600">{errors.password.message}</div>
           )}
         </div>
+        {/* //confirm password */}
         <div className="mb-4">
-          <button className="primary-button">Login </button>
+          <label htmlFor="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            className="w-full"
+            id="confirmPassword"
+            {...register('confirmPassword', {
+              required: 'Please enter the confirm password.',
+              validate: (value) => value === getValues('password'),
+              minLength: {
+                value: 6,
+                message: 'password should be more then 5 characters',
+              },
+            })}
+          />
+          {errors.confirmPassword && (
+            <div className="text-red-600">{errors.confirmPassword.message}</div>
+          )}
+        </div>
+
+        {errors.confirmPassword &&
+          errors.confirmPassword.type === 'validate' && (
+            <div className="text-red-500 ">Password do not match</div>
+          )}
+
+        <div className="mb-4">
+          <button className="primary-button">Register</button>
         </div>
         <div className="mb-4">
-          Don't have an account account?{' '}
+          Don&apos;t have an account account?&nbsp;
           <Link legacyBehavior href={`/register?redirect=${redirect || '/'}`}>
             Register
           </Link>
